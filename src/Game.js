@@ -38,10 +38,13 @@ function check_finish(game, x, y) {
 }
 
 class Game {
-  constructor(width, height) {
+  constructor(width, height, player1, player2) {
     this.board_state = [];
     this.width = width;
     this.height = height;
+
+    this.player1 = player1;
+    this.player2 = player2;
 
     this.initialize();
   }
@@ -52,10 +55,8 @@ class Game {
       this.board_state.push(0);
     this.turn = 1;
 
-    this.player1 = new WebPlayer();
     this.player1.on_init(this.width, this.height, 1);
 
-    this.player2 = new AIPlayer();
     this.player2.on_init(this.width, this.height, 2);
     this.event_emitter = new events.EventEmitter();
 
@@ -109,29 +110,5 @@ class Game {
     }
   }
 }
-
-class WebPlayer {
-  on_init(width, height, turn) {
-
-  }
-
-  on_my_turn(game) {
-
-  }
-}
-
-class AIPlayer {
-  on_init(width, height, turn) {
-    this.width = width;
-    this.height = height;
-    this.turn = turn;
-  }
-
-  on_my_turn(game) {
-    game.move(parseInt(Math.random() * this.width),parseInt(Math.random() * this.height));
-    setTimeout(function() {return game.play_the_game();}, 0);
-  }
-}
-
 
 export default Game;

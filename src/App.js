@@ -1,6 +1,32 @@
 import React, { Component, createContext } from 'react';
+import ReactDOM from 'react-dom';
 import Game from './Game';
+import AIPlayer from './AIPlayer';
 
+class WebPlayer {
+  constructor() {
+    this.my_turn = false;
+
+  }
+
+  on_init(width, height, turn) {
+  }
+
+  on_my_turn(game) {
+    this.my_turn = true;
+    this.game = game;
+    console.log("web player turn!");
+    ReactDOM.render(<App />, document.getElementById('root'));
+
+  }
+
+  onClickCell(x, y) {
+     
+  }
+}
+
+const web_player = new WebPlayer();
+const game = new Game(15, 15, web_player, new AIPlayer());
 const Context = createContext();
 
 class App extends Component {
@@ -20,7 +46,6 @@ class Cell extends Component {
       if(this.props.game.move(this.props.col, this.props.row) == 0) {
 	var game_tmp = this.props.game;
         setTimeout(function() { 
-	  console.log("asdf"); 
 	  return game_tmp.play_the_game();}, 0)
 	console.log("handle click");
       }
@@ -48,7 +73,7 @@ class Row extends Component {
 class Board extends Component {
   constructor(props) {
     super(props);
-    this.state = {game: new Game(15,15)};
+    this.state = {game: game};
   }
 
   render() {
