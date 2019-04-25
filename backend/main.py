@@ -6,10 +6,28 @@ from game import Game
 
 def play_episode(player1, player2):
   game = Game(15, 15)
+  
+  while(True):
+    ret = False
+    x = -1
+    y = -1
 
-  game.set_state(0, 0, 1)
-  game.get_state(0, 0)
+    while(ret):
+      x, y = player1.next(game)
+      ret = game.set_state(x, y, 1)
 
+    if (game.is_finished(x, y)):
+      return 1
+
+    ret = False
+    while(ret):
+      x, y = player2.next(game)
+      ret = game.set_state(x, y, 2)
+
+    if (game.is_finished(x, y)):
+      return 2
+
+  return 0
 
 def main():
   ai_player1 = AIPlayer(15, 15)
