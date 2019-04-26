@@ -12,19 +12,21 @@ def play_episode(player1, player2):
     x = -1
     y = -1
 
-    while(ret):
-      x, y = player1.next(game)
+    while(ret == False):
+      x, y = player1.next(game.board)
       ret = game.set_state(x, y, 1)
 
     if (game.is_finished(x, y)):
+      game.print_board()
       return 1
 
     ret = False
-    while(ret):
+    while(ret == False):
       x, y = player2.next(game)
       ret = game.set_state(x, y, 2)
 
     if (game.is_finished(x, y)):
+      game.print_board()
       return 2
 
   return 0

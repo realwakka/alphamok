@@ -6,12 +6,25 @@ class State(enum.Enum):
   kEmpty = 0
   kBlack = 1
   kWhite = 2
+  def __int__(self):
+    return self.value
+
 
 class Game(object):
   def __init__(self, width, height):
     self.board = np.zeros((width, height, 3), dtype=int)
+    for i in range(height):
+      for j in range(width):
+        self.board[i, j, 0] = 1
+
     self.width = width
     self.height = height 
+  def print_board(self):
+    for i in range(self.height):
+      for j in range(self.width):
+        print(int(self.get_state(j, i)), end=' ')
+      print()
+
 
   def get_state(self, x, y):
     if (x < 0 or x >= self.width or y < 0 or y >= self.height):
@@ -29,7 +42,16 @@ class Game(object):
       return True
 
     return False
+  def is_full(self):
+    for i in range(self.height):
+      for j in range(self.width):
+        if (self.board[i, j, 0] != 1):
+          return False
+
+    return True
+
   def is_finished(self, x, y):
+    
     if (self.is_game_finished(x, y, lambda x, y: (x+1, y), lambda x, y: (x-1, y)) == 6):
       return True
     if (self.is_game_finished(x, y, lambda x, y: (x, y+1), lambda x, y: (x, y-1)) == 6):
@@ -37,6 +59,9 @@ class Game(object):
     if (self.is_game_finished(x, y, lambda x, y: (x+1, y+1), lambda x, y: (x-1, y-1)) == 6):
       return True
     if (self.is_game_finished(x, y, lambda x, y: (x+1, y-1), lambda x, y: (x-1, y+1)) == 6):
+      return True
+
+    if (self.is_full()):
       return True
 
     return False
