@@ -4,6 +4,14 @@ import tensorflow as tf
 from ai_player import AIPlayer
 from game import Game
 
+class TestPlayer:
+  def next(self, game):
+    game.print_board()
+    x = input('x = ')
+    y = input('y = ')
+    return int(x),int(y)
+
+
 def play_episode(player1, player2):
   game = Game(15, 15)
   
@@ -13,7 +21,7 @@ def play_episode(player1, player2):
     y = -1
 
     while(ret == False):
-      x, y = player1.next(game.board)
+      x, y = player1.next(game)
       ret = game.set_state(x, y, 1)
 
     if (game.is_finished(x, y)):
@@ -34,6 +42,7 @@ def play_episode(player1, player2):
 def main():
   ai_player1 = AIPlayer(15, 15)
   ai_player2 = AIPlayer(15, 15)
+  #ai_player2 = TestPlayer()
   play_episode(ai_player1, ai_player2)
 
 """

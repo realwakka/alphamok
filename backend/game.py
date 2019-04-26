@@ -38,7 +38,8 @@ class Game(object):
 
   def set_state(self, x, y, state):
     if (self.board[x, y, 0] == 1):
-      self.board[x, y, state] == 1
+      self.board[x, y, 0] = 0
+      self.board[x, y, state] = 1
       return True
 
     return False
@@ -52,13 +53,13 @@ class Game(object):
 
   def is_finished(self, x, y):
     
-    if (self.is_game_finished(x, y, lambda x, y: (x+1, y), lambda x, y: (x-1, y)) == 6):
+    if (self.is_game_finished(x, y, lambda x, y: (x+1, y), lambda x, y: (x-1, y))):
       return True
-    if (self.is_game_finished(x, y, lambda x, y: (x, y+1), lambda x, y: (x, y-1)) == 6):
+    if (self.is_game_finished(x, y, lambda x, y: (x, y+1), lambda x, y: (x, y-1))):
       return True
-    if (self.is_game_finished(x, y, lambda x, y: (x+1, y+1), lambda x, y: (x-1, y-1)) == 6):
+    if (self.is_game_finished(x, y, lambda x, y: (x+1, y+1), lambda x, y: (x-1, y-1))):
       return True
-    if (self.is_game_finished(x, y, lambda x, y: (x+1, y-1), lambda x, y: (x-1, y+1)) == 6):
+    if (self.is_game_finished(x, y, lambda x, y: (x+1, y-1), lambda x, y: (x-1, y+1))):
       return True
 
     if (self.is_full()):
@@ -76,9 +77,9 @@ class Game(object):
 
   def is_game_finished(self, x, y, front, back):
     state = self.get_state(x, y)
-    if (self.check(x, y, front, state) + self.check(x, y, back, state) == 6):
+    front_count = self.check(x, y, front, state)
+    back_count = self.check(x, y, back, state)
+    if (front_count + back_count == 6):
       return True
     return False
 
-
-  

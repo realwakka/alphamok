@@ -28,7 +28,8 @@ class AIPlayer:
                   loss='sparse_categorical_crossentropy',
                   metrics=['accuracy'])
 
-  def next(self, board_state):
+  def next(self, game):
+    board_state = game.board
     #result = self.model.predict(board_state.reshape(1, 15, 15, 3))
     #print(result.shape)
     #result = result.reshape(15 * 15);
