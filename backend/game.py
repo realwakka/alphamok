@@ -12,6 +12,7 @@ class State(enum.Enum):
 
 class Game(object):
   def __init__(self, width, height):
+    self.history = []
     self.board = np.zeros((width, height, 3), dtype=int)
     for i in range(height):
       for j in range(width):
@@ -19,6 +20,9 @@ class Game(object):
 
     self.width = width
     self.height = height 
+  def move_count(self):
+    return len(self.history)
+    
   def print_board(self):
     for i in range(self.height):
       for j in range(self.width):
@@ -40,6 +44,7 @@ class Game(object):
     if (self.board[x, y, 0] == 1):
       self.board[x, y, 0] = 0
       self.board[x, y, state] = 1
+      self.history.append([x, y])
       return True
 
     return False
@@ -73,6 +78,8 @@ class Game(object):
       x, y = func(x,y)
   
     return count
+  def is_empty(self, x, y):
+    return self.get_state(x,y) == State.kEmpty
  
 
   def is_game_finished(self, x, y, front, back):

@@ -3,6 +3,7 @@ import numpy as np
 import tensorflow as tf
 from ai_player import AIPlayer
 from game import Game
+from game import State
 
 class TestPlayer:
   def next(self, game):
@@ -13,6 +14,9 @@ class TestPlayer:
 
 
 def play_episode(player1, player2):
+  player1.state = State.kBlack
+  player2.state = State.kWhite
+
   game = Game(15, 15)
   
   while(True):
@@ -26,7 +30,7 @@ def play_episode(player1, player2):
 
     if (game.is_finished(x, y)):
       game.print_board()
-      return 1
+      return game
 
     ret = False
     while(ret == False):
@@ -35,15 +39,20 @@ def play_episode(player1, player2):
 
     if (game.is_finished(x, y)):
       game.print_board()
-      return 2
+      return game
 
-  return 0
+  return None
 
 def main():
   ai_player1 = AIPlayer(15, 15)
   ai_player2 = AIPlayer(15, 15)
-  #ai_player2 = TestPlayer()
-  play_episode(ai_player1, ai_player2)
+  game = play_episode(ai_player1, ai_player2)
+  if game != None:
+    ai_player1.train_game(game)
+    ai_player2.model = ai_player1.model
+
+  game = play_episode(ai_player1, ai_player2)
+
 
 """
   with tf.Session() as sess:
