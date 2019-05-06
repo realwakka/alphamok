@@ -2,7 +2,7 @@ import enum
 import numpy as np
 import tensorflow as tf
 
-class GameState(emum.Enum):
+class GameState(enum.Enum):
   kBlackTurn = 0
   kWhiteTurn = 1
   kEndDraw = 2
@@ -15,7 +15,6 @@ class State(enum.Enum):
   kWhite = 2
   def __int__(self):
     return self.value
-
 
 class Game:
   def __init__(self, width, height):
