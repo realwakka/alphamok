@@ -2,6 +2,13 @@ import enum
 import numpy as np
 import tensorflow as tf
 
+class GameState(emum.Enum):
+  kBlackTurn = 0
+  kWhiteTurn = 1
+  kEndDraw = 2
+  kEndBlackWin = 3
+  kEndWhiteWin = 4
+
 class State(enum.Enum):
   kEmpty = 0
   kBlack = 1
@@ -10,16 +17,24 @@ class State(enum.Enum):
     return self.value
 
 
-class Game(object):
+class Game:
   def __init__(self, width, height):
     self.history = []
-    self.board = np.zeros((width, height, 3), dtype=int)
-    for i in range(height):
-      for j in range(width):
-        self.board[i, j, 0] = 1
-
+    self.board = np.zeros((width, height), dtype=int)
     self.width = width
     self.height = height 
+
+  def get_current_player():
+    return len(self.history) % 2 + 1
+
+  def available_move():
+    list = []
+    for i in range(self.height):
+      for j in range(self.width):
+        if self.board[j, i, 0] == State.kEmpty:
+          list.append({j, i})
+    return list
+
   def move_count(self):
     return len(self.history)
     
@@ -28,35 +43,40 @@ class Game(object):
       for j in range(self.width):
         print(int(self.get_state(j, i)), end=' ')
       print()
-
-
+   
   def get_state(self, x, y):
-    if (x < 0 or x >= self.width or y < 0 or y >= self.height):
-      return -1
-    if (self.board[x, y, 0] == 1):
-      return State.kEmpty
-    elif (self.board[x, y, 1] == 1):
-      return State.kBlack
-    elif (self.board[x, y, 2] == 1):
-      return State.kWhite
+    if x >= 0 and x < self.width and y >= 0 and y < self.height:
+      return self.board[x, y]
+    return -1
 
   def set_state(self, x, y, state):
-    if (self.board[x, y, 0] == 1):
-      self.board[x, y, 0] = 0
-      self.board[x, y, state] = 1
-      self.history.append([x, y])
+    if x >= 0 and x < self.width and y >= 0 and y < self.height:
+      self.board[x, y] = state
       return True
-
     return False
+
+  def is_finished(self):
+    for i in range(self.height):
+      for j in range(self.width):
+        if self.is_finished(j, i) == True:
+          return True, self.get_state(j,i)
+
+    if self.is_full():
+      return True, -1
+
+    return False, -1
+
   def is_full(self):
     for i in range(self.height):
       for j in range(self.width):
-        if (self.board[i, j, 0] != 1):
+        if self.board[i, j] != State.kEmpty:
           return False
 
     return True
 
   def is_finished(self, x, y):
+    if self.is_empty(x, y):
+      return False
     
     if (self.is_game_finished(x, y, lambda x, y: (x+1, y), lambda x, y: (x-1, y))):
       return True
@@ -65,9 +85,6 @@ class Game(object):
     if (self.is_game_finished(x, y, lambda x, y: (x+1, y+1), lambda x, y: (x-1, y-1))):
       return True
     if (self.is_game_finished(x, y, lambda x, y: (x+1, y-1), lambda x, y: (x-1, y+1))):
-      return True
-
-    if (self.is_full()):
       return True
 
     return False
@@ -80,7 +97,6 @@ class Game(object):
     return count
   def is_empty(self, x, y):
     return self.get_state(x,y) == State.kEmpty
- 
 
   def is_game_finished(self, x, y, front, back):
     state = self.get_state(x, y)
