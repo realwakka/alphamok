@@ -51,9 +51,10 @@ class Game:
   def set_state(self, x, y, state):
     if x >= 0 and x < self.width and y >= 0 and y < self.height:
       self.board[x, y] = state
+      self.history.append({x,y})
       return True
     return False
-
+     
   def is_finished(self):
     for i in range(self.height):
       for j in range(self.width):

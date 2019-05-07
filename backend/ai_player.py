@@ -1,85 +1,87 @@
-from tensorflow.keras import datasets, layers, models
+from tensorflow.keras import datasets, layers, models, regularizers, Input, optimizers
 import numpy as np
 import random
+from mcts import MCTS
+from game import Game
+
+def create_input(game):
+  current = game.current_player()
+  input_data = np.zeros((4, game.width, game.height))
+
+  input_data[2][game.last_move()] = 1
+
+  for i in range(game.height):
+    for j in range(game.width):
+      state = game.get_state()
+      input_data[0][j, i] = 1
+      input_data[3][j, i] = state
+      if state == State.kEmpty:
+        input_data[0][j,i] = 0
+      elif state == current:
+        input_data[0][j,i] = 1
+      else:
+        input_data[1][j,i] = 1
+        if game.last_move() == {j,i}:
+          input_data[2][j,i] = 1
+
+  return input_data
 
 class AIPlayer:
   def __init__(self, width, height):
-    self.model = models.Sequential()
-    self.model.add(layers.Conv2D(32, (5, 5), padding='same', activation='relu', input_shape=(15, 15, 3)))
+    self.width = width
+    self.height = height
+    self.l2_const = 1e-4  # coef of l2 penalty
+    in_x = network = Input((4, self.width, self.height))
+    network = layers.Conv2D(filters=32, kernel_size=(3, 3), padding="same", data_format="channels_first", activation="relu", kernel_regularizer=regularizers.l2(self.l2_const))(network)
+    network = layers.Conv2D(filters=64, kernel_size=(3, 3), padding="same", data_format="channels_first", activation="relu", kernel_regularizer=regularizers.l2(self.l2_const))(network)
+    network = layers.Conv2D(filters=128, kernel_size=(3, 3), padding="same", data_format="channels_first", activation="relu", kernel_regularizer=regularizers.l2(self.l2_const))(network)
+    # action policy layers
+    policy_net = layers.Conv2D(filters=4, kernel_size=(1, 1), data_format="channels_first", activation="relu", kernel_regularizer=regularizers.l2(self.l2_const))(network)
+    policy_net = layers.Flatten()(policy_net)
+    self.policy_net = layers.Dense(self.width*self.height, activation="softmax", kernel_regularizer=regularizers.l2(self.l2_const))(policy_net)
+    # state value layers
+    value_net = layers.Conv2D(filters=2, kernel_size=(1, 1), data_format="channels_first", activation="relu", kernel_regularizer=regularizers.l2(self.l2_const))(network)
+    value_net = layers.Flatten()(value_net)
+    value_net = layers.Dense(64, kernel_regularizer=regularizers.l2(self.l2_const))(value_net)
+    self.value_net = layers.Dense(1, activation="tanh", kernel_regularizer=regularizers.l2(self.l2_const))(value_net)
 
-    for i in range(10):
-      self.model.add(layers.Conv2D(192, (3, 3), padding='same', activation='relu'))
+    self.model = models.Model(in_x, [self.policy_net, self.value_net])
 
-    self.model.add(layers.Conv2D(192, (1, 1), padding='same', activation='relu'))
-    self.model.add(layers.Flatten())
-    self.model.add(layers.Dense(256, activation='relu'))
-    self.model.add(layers.Dense(1, activation='softmax'))
-
-    """
-    self.model.add(layers.Conv2D(64, (3, 3), activation='relu'))
-    self.model.add(layers.MaxPooling2D((2, 2)))
-
-
-    self.model.add(layers.Dense((width, height), activation='relu'))
-    self.model.add(layers.Dense(width * height, activation='softmax'))
-    """
-
-    self.model.compile(optimizer='adam',
-                  loss='sparse_categorical_crossentropy',
-                  metrics=['accuracy'])
-
-  def get_winning_rate(self, x, y, board):
-    tmp_board = np.copy(board)
-    tmp_board[x, y, int(self.state)] = 1
-    tmp_board[x, y, 0] = 0
-    result = self.model.predict(board.reshape(1, 15, 15, 3))
-    return result 
+    opt = optimizers.Adam()
+    losses = ['categorical_crossentropy', 'mean_squared_error']
+    self.model.compile(optimizer=opt, loss=losses)
+    self.mcts = MCTS(self.policy_value, 5, 400)
 
   def next(self, game):
-    max_rate = -1
-    best_list = []
-    max_x = -1
-    max_y = -1
-    for i in range(game.height):
-      for j in range(game.width):
-        if game.is_empty(i, j):
-          if self.get_winning_rate(j, i, game.board) > max_rate:
-            best_list.append([j, i])
-    
-    best_next = best_list[random.randrange(len(best_list))]
+    acts, probs = self.mcts.get_move_probs(game, 1e-3)
+    move_probs = np.zeros(game.width*game.height)
+    move = np.random.choice(acts, p=0.75*probs + 0.25*np.random.dirichlet(0.3*np.ones(len(probs))))
+    return move
 
-    print('selected x = ' + str(best_next[0]) + ' selected y = ' + str(best_next[1]))
-    print('max rate = ' + str(max_rate))
-    return best_next[0], best_next[1]
-          
+  def policy_value(self, board):
+    input_data = create_input(game)
+    legal_positions = board.availables()
+    current_state = board.current_state()
+    state_input_union = np.array(state_input)
+    act_probs, value = self.model.predict(input_data)
+    act_probs = zip(legal_positions, act_probs.flatten()[legal_positions])
+    return act_probs, value[0][0]
+
+  def next(self, game):
+    result = self.model.predict(game.board.reshape(1, self.width, self.height, 3))
+    result = result.reshape(self.width * self.height)
+    indices = np.argsort(result)
+    i = self.width * self.height - 1
+
     while True:
-      result = self.model.predict(game.board.reshape(1, 15, 15, 3))
-      result = result.reshape(15,15)
-      max_indices = np.argwhere(result == np.amax(result))
+      x = indices[i] % self.width
+      y = indices[i] // self.width
 
-      selected = random.randrange(0, max_indices.shape[0])
-      x = max_indices[selected][0]
-      y = max_indices[selected][1]
-      if (game.is_empty(x,y)):
-        return x,y
-      game.print_board()
-      input('failed')
-      result[x,y] = 0
-      self.train(game.board.reshape(1, 15,15, 3), result.reshape(1, 15, 15, 1))
-      
-  def train_game(self, game):
-    count = game.move_count()
-    board_data = np.zeros(count, 15, 15, 3)
-    result = np.zeros(count)
-    i = 0
-    for elem in game.history:
-        board_data[i, elem[0], elem[1], (i%2) + 1] = 1
-        if i%2 == count%2:
-          result[i] = 1
-        else:
-          result[i] = 0
-        i = i + 1
-    self.model.fit(board_data, result, epochs=5)
-      
-  def train(self, state, result):
-    self.model.fit(state, result, epochs=5)
+      if game.is_empty(x, y):
+        return x, y
+
+      if i == 0:
+        break;
+      i -= 1
+    raise Exception('full!')
+

@@ -1,7 +1,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 import numpy as np
 import tensorflow as tf
-#from ai_player import AIPlayer
+from ai_player import AIPlayer
 from game import Game
 from game import State
 
@@ -16,7 +16,6 @@ class TestPlayer:
 def play_episode(player1, player2):
   player1.state = State.kBlack
   player2.state = State.kWhite
-
   game = Game(15, 15)
   
   while(True):
@@ -47,7 +46,7 @@ def play_episode(player1, player2):
 
 def main():
   ai_player1 = TestPlayer()
-  ai_player2 = TestPlayer()
+  ai_player2 = AIPlayer(15, 15)
   while True:
     game = play_episode(ai_player1, ai_player2)
     if game != None:
