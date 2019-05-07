@@ -2,19 +2,17 @@ import enum
 import numpy as np
 import tensorflow as tf
 
-class GameState(enum.Enum):
+class GameState(enum.IntEnum):
   kBlackTurn = 0
   kWhiteTurn = 1
   kEndDraw = 2
   kEndBlackWin = 3
   kEndWhiteWin = 4
 
-class State(enum.Enum):
+class State(enum.IntEnum):
   kEmpty = 0
   kBlack = 1
   kWhite = 2
-  def __int__(self):
-    return self.value
 
 class Game:
   def __init__(self, width, height):
@@ -23,15 +21,18 @@ class Game:
     self.width = width
     self.height = height 
 
-  def get_current_player():
+  def current_player(self):
     return len(self.history) % 2 + 1
 
-  def available_move():
+  def last_move(self):
+    return self.history[-1]
+
+  def availables(self):
     list = []
     for i in range(self.height):
       for j in range(self.width):
-        if self.board[j, i, 0] == State.kEmpty:
-          list.append({j, i})
+        if self.board[j, i] == State.kEmpty:
+          list.append((j, i))
     return list
 
   def move_count(self):
@@ -51,14 +52,14 @@ class Game:
   def set_state(self, x, y, state):
     if x >= 0 and x < self.width and y >= 0 and y < self.height:
       self.board[x, y] = state
-      self.history.append({x,y})
+      self.history.append((x,y))
       return True
     return False
      
   def is_finished(self):
     for i in range(self.height):
       for j in range(self.width):
-        if self.is_finished(j, i) == True:
+        if self.is_finished_move(j, i) == True:
           return True, self.get_state(j,i)
 
     if self.is_full():
@@ -74,7 +75,7 @@ class Game:
 
     return True
 
-  def is_finished(self, x, y):
+  def is_finished_move(self, x, y):
     if self.is_empty(x, y):
       return False
     
@@ -88,6 +89,7 @@ class Game:
       return True
 
     return False
+  
   def check(self, x, y, func, state):
     count = 0
     while(self.get_state(x,y) == state):
@@ -96,7 +98,7 @@ class Game:
   
     return count
   def is_empty(self, x, y):
-    return self.get_state(x,y) == State.kEmpty
+    return self.get_state(x,y) == 0
 
   def is_game_finished(self, x, y, front, back):
     state = self.get_state(x, y)

@@ -27,7 +27,7 @@ def play_episode(player1, player2):
       x, y = player1.next(game)
       ret = game.set_state(x, y, 1)
 
-    if (game.is_finished(x, y)):
+    if (game.is_finished_move(x, y)):
       game.print_board()
       print('player 1 win!')
       return game
@@ -37,7 +37,7 @@ def play_episode(player1, player2):
       x, y = player2.next(game)
       ret = game.set_state(x, y, 2)
 
-    if (game.is_finished(x, y)):
+    if (game.is_finished_move(x, y)):
       game.print_board()
       print('player 2 win!')
       return game
